@@ -1,4 +1,5 @@
 import sys
+from lastversion import latest
 from os.path import abspath, dirname
 
 sys.setrecursionlimit(2000)
@@ -7,8 +8,9 @@ sys.path.insert(1, dirname(dirname(abspath(__file__))))
 project = "Katia"
 copyright = "2023, Martín Galdeano Cañizares"
 author = "Martín Galdeano Cañizares"
-version = "0.0.1"
-release = "0.0.1"
+version = release = latest(
+    "https://pypi.org/project/katia/", output_format='version', pre_ok=True
+).base_version
 
 extensions = [
     "sphinx.ext.duration",
