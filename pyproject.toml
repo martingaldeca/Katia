@@ -7,6 +7,12 @@ maintainers = ["martingaldeca <martingaldeca@gmail.com>"]
 packages = [
     { include = "katia" }
 ]
+readme = "README.rst"
+homepage = "https://katia.readthedocs.io/en/latest/"
+repository = "https://github.com/martingaldeca/Katia"
+documentation = "https://katia.readthedocs.io/en/latest/"
+keywords = ["OPENAI", "chatgpt", "assistant", "voice"]
+
 
 [tool.poetry.dependencies]
 python = ">=3.8.0,<4.0.0"
