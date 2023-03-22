@@ -4,7 +4,7 @@
 Katia Readme
 ============
 
-.. image:: ./artwork/logo.png
+.. image:: https://katia.readthedocs.io/en/latest/_images/logo.png
     :align: center
     :alt: logo
     :height: 300px
