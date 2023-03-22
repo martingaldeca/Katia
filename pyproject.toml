@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "katia"
-version = "0.0.2"
+version = "0.1.0"
 description = "Katia is a wonderfull assistant created for help people to iteract with the digital world"
 authors = ["martingaldeca <martingaldeca@gmail.com>"]
 maintainers = ["martingaldeca <martingaldeca@gmail.com>"]

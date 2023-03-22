@@ -1,5 +1,7 @@
 name: publish
-on: [release]
+on:
+  release:
+    types: [published]
 permissions:
   contents: read
 
@@ -19,11 +21,6 @@ jobs:
       - name: Configure poetry
         run: |
           python -m poetry config virtualenvs.in-project true
-      - name: Cache the virtualenv
-        uses: actions/cache@v2
-        with:
-          path: ./.venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - name: Install extra requirements for pyaudio
         run: |
           sudo apt-get install libasound-dev
