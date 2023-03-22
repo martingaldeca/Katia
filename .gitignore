@@ -1,0 +1,8 @@
+katia.lo*
+response.mp3
+.coverage
+.idea/*
+docs/build
+.env
+coverage.lcov
+dist/*

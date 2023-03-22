@@ -1,0 +1,68 @@
+[tool.poetry]
+name = "katia"
+version = "0.0.1"
+description = "Katia is a wonderfull assistant created for help people to iteract with the digital world"
+authors = ["martingaldeca <martingaldeca@gmail.com>"]
+maintainers = ["martingaldeca <martingaldeca@gmail.com>"]
+packages = [
+    { include = "katia" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8.0,<4.0.0"
+speechrecognition = "3.9.0"
+confluent-kafka = "2.0.2"
+pyaudio = "0.2.13"
+python-dotenv = "1.0.0"
+PyYAML = "6.0"
+googletrans = "3.1.0a0"
+openai = "0.27.2"
+boto3 = "1.26.90"
+pygame = "2.2.0"
+
+[tool.poetry.dev-dependencies]
+ipython = "8.11.0"
+pylint = "2.17.0"
+black = "23.1.0"
+isort = "5.12.0"
+ipdb = "0.13.13"
+pytest-cov = "4.0.0"
+pytest-xdist = "3.2.1"
+ruff = "0.0.257"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pylint]
+max-line-length = 90
+disable = ["C0114", "W0718", "R0902", "R0903"]
+good-names = ['ex', ]
+
+[tool.black]
+line-length = 90
+exclude = ["htmlcov", "venv", ".pytest_cache", ".ruff_cache", "docs"]
+
+[tool.isort]
+skip = "__init__.py"
+src_paths = ["katia", "tests"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+omit = [
+    "katia/logger_manager/*",
+]
+relative_files = true
+
+[tool.ruff]
+line-length = 90
+exclude = [
+    ".pytest_cache",
+    "venv",
+]
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401", "F403"]

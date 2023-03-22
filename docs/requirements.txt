@@ -1,0 +1,4 @@
+# Requirements for documentation
+sphinx-hoverxref==1.3.0
+sphinx-notfound-page==0.8.3
+sphinx-rtd-theme==1.2.0
