@@ -267,7 +267,7 @@ class KatiaSpeakerTestCase(TestCase):
                 )
 
     def test_send_last_speak(self):
-        with mock.patch(
+        with mock.patch("katia.speaker.speaker.Session"), mock.patch(
             "katia.speaker.speaker.mixer"
         ), mock.patch(
             "katia.speaker.speaker.KatiaConsumer"
