@@ -14,7 +14,7 @@ class ProducerTestCase(TestCase):
                 "KAFKA_BROKER_PORT": "test-broker-port",
             },
         ):
-            producer = KatiaProducer(topic="test-topic")
+            producer = KatiaProducer(topic="test-topic", group_id="test-uuid")
             self.assertEqual(producer.topic, "test-topic")
             self.assertEqual(producer.broker_host, "test-broker-url")
             self.assertEqual(producer.broker_port, "test-broker-port")
@@ -37,7 +37,7 @@ class ProducerTestCase(TestCase):
         with mock.patch.object(
             KatiaProducer, "produce"
         ) as mock_produce, mock.patch.object(KatiaProducer, "flush") as mock_flush:
-            producer = KatiaProducer(topic="test-topic")
+            producer = KatiaProducer(topic="test-topic", group_id="test-uuid")
             message_data = {"test": "test"}
             producer.send_message(message_data=message_data)
             self.assertEqual(mock_produce.call_count, 1)

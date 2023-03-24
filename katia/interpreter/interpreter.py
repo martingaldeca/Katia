@@ -40,8 +40,14 @@ class KatiaInterpreter(Thread):
         self.adjectives = adjectives
         self.messages = [{"role": "system", "content": self.initial_prompt}]
 
-        self.consumer = KatiaConsumer(topic=f"user-{owner_uuid}-interpreter")
-        self.producer = KatiaProducer(topic=f"user-{owner_uuid}-speaker")
+        self.consumer = KatiaConsumer(
+            topic=f"user-{owner_uuid}-interpreter",
+            group_id=owner_uuid
+        )
+        self.producer = KatiaProducer(
+            topic=f"user-{owner_uuid}-speaker",
+            group_id=owner_uuid
+        )
         self.active = True
         logger.info("Interpreter started")
 
@@ -67,21 +73,24 @@ class KatiaInterpreter(Thread):
             )
             response_text = response["choices"][0]["message"]["content"]
             logger.info(
-                "Response from openai obtained in '%s' seconds", time.time() - start
+                "Response from openai obtained in '%s' seconds",
+                round(time.time() - start, 2)
             )
             self.messages.append({"role": "assistant", "content": response_text})
-
         except Exception as ex:
             self.messages.pop()
             logger.error(
                 "Something went wrong doing the interpretation of the message",
-                extra={"error": str(ex), "message": message},
+                extra={
+                    "error": str(ex),
+                    "err_message": message
+                },
             )
             translator = Translator()
             response_text = translator.translate(
                 text=(
-                    "ups, something went wrong. It seems that I can not understand what "
-                    "are you saying"
+                    "sorry, something went wrong. It seems that I can not understand "
+                    "what are you saying"
                 ),
                 dest=self.language.split("-", maxsplit=1)[0],
             ).text

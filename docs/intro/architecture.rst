@@ -23,6 +23,12 @@ interpreter in a dedicated server.
 
 While they are connected to the same Kafka this will work.
 
+There is one weak limitation. If you want Katia to work better you should run the
+recognizer and the speaker in the same host. As some of the things it is doing is checking
+if she is already talking (using mixer).
+
+So if you separate them, it will work yes, but maybe she tries to interact with herself.
+
 .. _intro-architecture-schema:
 
 Schema

@@ -40,8 +40,11 @@ class KatiaRecognizerTestCase(TestCase):
             self.assertEqual(
                 mock_producer.call_args_list,
                 [
-                    mock.call(topic="user-test-uuid-interpreter"),
-                    mock.call(topic="user-test-uuid-speaker-stopper"),
+                    mock.call(topic="user-test-uuid-interpreter", group_id="test-uuid"),
+                    mock.call(
+                        topic="user-test-uuid-speaker-stopper",
+                        group_id="test-uuid"
+                    ),
                 ],
             )
 
@@ -132,7 +135,7 @@ class KatiaRecognizerTestCase(TestCase):
                 1,
                 [
                     mock.call(
-                        message_data={"source": "recognizer", "message": "Stop talking"}
+                        message_data={"source": "recognizer", "message": "Stop speaking"}
                     )
                 ],
             ),
@@ -140,15 +143,8 @@ class KatiaRecognizerTestCase(TestCase):
             (
                 True,
                 False,
-                2,
-                [
-                    mock.call(
-                        message_data={"source": "recognizer", "message": "Stop talking"}
-                    ),
-                    mock.call(
-                        message_data={"source": "recognizer", "message": "test-message"}
-                    ),
-                ],
+                0,
+                [],
             ),
             (
                 False,

@@ -18,7 +18,7 @@ class KatiaConsumerTestCase(TestCase):
                 "KAFKA_BROKER_PORT": "test-broker-port",
             },
         ):
-            consumer = KatiaConsumer(topic="test-topic")
+            consumer = KatiaConsumer(topic="test-topic", group_id="test-uuid")
             self.assertEqual(consumer.topic, "test-topic")
             self.assertEqual(consumer.broker_host, "test-broker-url")
             self.assertEqual(consumer.broker_port, "test-broker-port")
@@ -50,7 +50,7 @@ class KatiaConsumerTestCase(TestCase):
                 message, mock_logger_error_call_count, expected_response = test_data
                 mock_poll.return_value = message
 
-                consumer = KatiaConsumer(topic="test-topic")
+                consumer = KatiaConsumer(topic="test-topic", group_id="test-uuid")
                 self.assertEqual(consumer.get_message(), expected_response)
                 self.assertEqual(mock_poll.call_count, 1)
                 self.assertEqual(
@@ -68,5 +68,5 @@ class KatiaConsumerTestCase(TestCase):
             ) as mock_get_message:
                 message, expected = test_data
                 mock_get_message.return_value = message
-                consumer = KatiaConsumer(topic="test-topic")
+                consumer = KatiaConsumer(topic="test-topic", group_id="test-uuid")
                 self.assertEqual(consumer.get_data(), expected)

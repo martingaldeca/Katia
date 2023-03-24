@@ -1,6 +1,7 @@
 import sys
-from lastversion import latest
 from os.path import abspath, dirname
+
+from lastversion import latest
 
 sys.setrecursionlimit(2000)
 sys.path.insert(1, dirname(dirname(abspath(__file__))))

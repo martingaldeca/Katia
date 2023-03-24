@@ -39,6 +39,7 @@ class Owner:
                 f"user-{self.uuid}-speaker",
                 f"user-{self.uuid}-speaker-stopper",
                 f"user-{self.uuid}-interpreter",
+                f"user-{self.uuid}-recognizer-last-speaking"
             ]
         ]
         topic_creation = admin_client.create_topics(new_topics)

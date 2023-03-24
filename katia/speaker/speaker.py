@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import time
@@ -9,6 +10,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from googletrans import Translator
 from pygame import mixer
 
+from katia.message_manager import KatiaProducer
 from katia.message_manager.consumer import KatiaConsumer
 
 logger = logging.getLogger("KatiaSpeaker")
@@ -35,8 +37,18 @@ class KatiaSpeaker(Thread):
         mixer.init()
         mixer.set_num_channels(1)
 
-        self.consumer = KatiaConsumer(topic=f"user-{owner_uuid}-speaker")
-        self.stopper_consumer = KatiaConsumer(topic=f"user-{owner_uuid}-speaker-stopper")
+        self.consumer = KatiaConsumer(
+            topic=f"user-{owner_uuid}-speaker",
+            group_id=owner_uuid
+        )
+        self.consumer_stopper = KatiaConsumer(
+            topic=f"user-{owner_uuid}-speaker-stopper",
+            group_id=owner_uuid
+        )
+        self.producer_last_speaking = KatiaProducer(
+            topic=f"user-{owner_uuid}-recognizer-last-speaking",
+            group_id=owner_uuid
+        )
         self.active = True
         logger.info("Speaker started")
 
@@ -70,19 +82,20 @@ class KatiaSpeaker(Thread):
             while mixer.music.get_busy() and self.can_speak:
                 logger.debug("Waiting to end sentence")
                 time.sleep(1)
+        self.send_last_speak()
 
     @property
     def can_speak(self):
         """
         Katia will always be able to speak new things. But if recognizer sent something
-        new she will stop talking until process the new.
+        new she will stop speaking until process the new.
         :return:
         """
-        data = self.stopper_consumer.get_data()
+        data = self.consumer_stopper.get_data()
         if data and (source := data.get("source", None)):
             if source == "recognizer":
                 logger.debug(
-                    "Stop talking because the recognizer recognized something new"
+                    "Stop speaking because the recognizer recognized something new"
                 )
                 mixer.music.stop()
         return True
@@ -126,3 +139,17 @@ class KatiaSpeaker(Thread):
         :return:
         """
         self.active = False
+
+    def send_last_speak(self):
+        """
+        Method to sent to kafka when the speaker stop speaking
+        """
+        logger.debug(
+            "Sending the message to the recognizer about when Katia stop speaking"
+        )
+        self.producer_last_speaking.send_message(
+            message_data={
+                "source": "speaker",
+                "message": datetime.datetime.now().isoformat()
+            }
+        )
