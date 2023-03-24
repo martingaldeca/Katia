@@ -34,11 +34,17 @@ class KatiaInterpreterTestCase(TestCase):
             )
             self.assertEqual(mock_consumer.call_count, 1)
             self.assertEqual(
-                mock_consumer.call_args, mock.call(topic="user-test-uuid-interpreter")
+                mock_consumer.call_args, mock.call(
+                    topic="user-test-uuid-interpreter",
+                    group_id="test-uuid"
+                )
             )
             self.assertEqual(mock_producer.call_count, 1)
             self.assertEqual(
-                mock_producer.call_args, mock.call(topic="user-test-uuid-speaker")
+                mock_producer.call_args, mock.call(
+                    topic="user-test-uuid-speaker",
+                    group_id="test-uuid"
+                )
             )
             self.assertEqual(mock_initial_prompt.call_count, 1)
             self.assertEqual(
@@ -155,7 +161,7 @@ class KatiaInterpreterTestCase(TestCase):
             mock_initial_prompt.return_value = "test-prompt"
             mock_openai.ChatCompletion.create.side_effect = Exception("test-exception")
             mock_translate = mock.MagicMock()
-            mock_translate.text = "ups-message"
+            mock_translate.text = "sorry-message"
             mock_translator().translate.return_value = mock_translate
             interpreter = KatiaInterpreter(
                 name="test-name",
@@ -174,7 +180,7 @@ class KatiaInterpreterTestCase(TestCase):
             self.assertEqual(
                 mock_producer().send_message.call_args,
                 mock.call(
-                    message_data={"source": "interpreter", "message": "ups-message"}
+                    message_data={"source": "interpreter", "message": "sorry-message"}
                 ),
             )
             self.assertEqual(mock_translator().translate.call_count, 1)
@@ -182,7 +188,7 @@ class KatiaInterpreterTestCase(TestCase):
                 mock_translator().translate.call_args,
                 mock.call(
                     text=(
-                        "ups, something went wrong. It seems that I can not understand "
+                        "sorry, something went wrong. It seems that I can not understand "
                         "what are you saying"
                     ),
                     dest="test",
@@ -193,7 +199,7 @@ class KatiaInterpreterTestCase(TestCase):
                 mock_logger_error.call_args,
                 mock.call(
                     "Something went wrong doing the interpretation of the message",
-                    extra={"error": "test-exception", "message": "test-message"},
+                    extra={"error": "test-exception", "err_message": "test-message"},
                 ),
             )
 

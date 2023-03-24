@@ -220,6 +220,20 @@ Recognizer configuration
     for something like ``Hey catia, can you shut up now please?`` it will not work. You
     should add ``can``, ``you`` and ``now`` to ``RECOGNIZER_STOPPER_EXTRA_WORDS``.
 
+* ``RECOGNIZER_CONTINUE_CONVERSATION_DELAY_IN_SECONDS``:
+
+    Seconds to wait for the recognizer to stop conversation flux (so you have to call
+    again the assistant). This is not since start talking but since Katia stopped talking.
+
+* ``RECOGNIZER_GAP_CONTINUE_CONVERSATION_IN_SECONDS``:
+
+    Gap between when Katia stopped talking and before your next iteration with Katia.
+    You can configure it to ``0``, but, the recognizer maybe get the Katia response as one
+    of your answers, and Katia will start talking with herself.
+
+    In future this should be removed if using voice recognition instead of speech
+    recognition.
+
 .. _configuration-katia_configuration-interpreter_configuration:
 
 Interpreter configuration

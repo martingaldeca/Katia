@@ -2,6 +2,7 @@ import os
 from logging import Logger, getLogger
 from unittest import TestCase, mock
 
+import freezegun
 from botocore.exceptions import BotoCoreError
 
 from katia.speaker import KatiaSpeaker
@@ -24,7 +25,9 @@ class KatiaSpeakerTestCase(TestCase):
             "katia.speaker.speaker.mixer"
         ) as mock_mixer, mock.patch(
             "katia.speaker.speaker.KatiaConsumer"
-        ) as mock_consumer:
+        ) as mock_consumer, mock.patch(
+            "katia.speaker.speaker.KatiaProducer"
+        ) as mock_producer:
             speaker = KatiaSpeaker(owner_uuid="test-uuid")
             self.assertEqual(speaker.profile_name, "test-profile")
             self.assertEqual(speaker.voice, "test-voice-name")
@@ -40,13 +43,25 @@ class KatiaSpeakerTestCase(TestCase):
             self.assertEqual(
                 mock_consumer.call_args_list,
                 [
-                    mock.call(topic="user-test-uuid-speaker"),
-                    mock.call(topic="user-test-uuid-speaker-stopper"),
+                    mock.call(topic="user-test-uuid-speaker", group_id="test-uuid"),
+                    mock.call(
+                        topic="user-test-uuid-speaker-stopper", group_id="test-uuid"
+                    ),
                 ],
+            )
+            self.assertEqual(mock_producer.call_count, 1)
+            self.assertEqual(
+                mock_producer.call_args,
+                mock.call(
+                    topic="user-test-uuid-recognizer-last-speaking",
+                    group_id="test-uuid"
+                ),
             )
 
     def test_run(self):
-        with mock.patch("katia.speaker.speaker.KatiaConsumer"), mock.patch.object(
+        with mock.patch("katia.speaker.speaker.KatiaConsumer"), mock.patch(
+            "katia.speaker.speaker.KatiaProducer"
+        ), mock.patch.object(
             KatiaSpeaker, "speak"
         ) as mock_speak, mock.patch("katia.speaker.speaker.Session"), mock.patch(
             "katia.speaker.speaker.mixer"
@@ -75,6 +90,8 @@ class KatiaSpeakerTestCase(TestCase):
                     "AWS_VOICE_NAME": "test-voice-name",
                 },
             ), mock.patch("katia.speaker.speaker.KatiaConsumer"), mock.patch(
+                "katia.speaker.speaker.KatiaProducer"
+            ), mock.patch(
                 "katia.speaker.speaker.Session"
             ) as mock_session, mock.patch(
                 "katia.speaker.speaker.mixer"
@@ -86,7 +103,10 @@ class KatiaSpeakerTestCase(TestCase):
                 "time.sleep"
             ) as mock_sleep, mock.patch.object(
                 getLogger("KatiaSpeaker"), "debug"
-            ) as mock_logger_debug:
+            ) as mock_logger_debug, mock.patch.object(
+                KatiaSpeaker,
+                'send_last_speak'
+            ) as mock_send_last_speak:
                 (
                     response,
                     mock_mixer_music_load_and_play_call_count,
@@ -123,6 +143,7 @@ class KatiaSpeakerTestCase(TestCase):
                 self.assertEqual(
                     mock_logger_debug.call_count, mock_logger_debug_call_count
                 )
+                self.assertEqual(mock_send_last_speak.call_count, 1)
 
     def test_can_speak(self):
         test_data_list = [
@@ -157,6 +178,8 @@ class KatiaSpeakerTestCase(TestCase):
             with self.subTest(test_data=test_data), mock.patch(
                 "katia.speaker.speaker.KatiaConsumer"
             ) as mock_consumer, mock.patch(
+                "katia.speaker.speaker.KatiaProducer"
+            ), mock.patch(
                 "katia.speaker.speaker.Session"
             ), mock.patch.object(
                 KatiaSpeaker, "wait_until_interpreter"
@@ -182,6 +205,8 @@ class KatiaSpeakerTestCase(TestCase):
         with mock.patch(
             "katia.speaker.speaker.KatiaConsumer"
         ) as mock_consumer, mock.patch(
+            "katia.speaker.speaker.KatiaProducer"
+        ), mock.patch(
             "katia.speaker.speaker.Session"
         ), mock.patch.object(
             KatiaSpeaker, "wait_until_interpreter"
@@ -214,7 +239,9 @@ class KatiaSpeakerTestCase(TestCase):
         for test_data in test_data_list:
             with mock.patch("katia.speaker.speaker.Session"), self.subTest(
                 test_data=test_data
-            ), mock.patch("katia.speaker.speaker.KatiaConsumer"), mock.patch.dict(
+            ), mock.patch("katia.speaker.speaker.KatiaConsumer"), mock.patch(
+                "katia.speaker.speaker.KatiaProducer"
+            ), mock.patch.dict(
                 os.environ,
                 {
                     "KATIA_LANGUAGE": test_data[0],
@@ -238,3 +265,26 @@ class KatiaSpeakerTestCase(TestCase):
                 self.assertEqual(
                     mock_speak_message.call_args, mock.call(message=expected_value)
                 )
+
+    def test_send_last_speak(self):
+        with mock.patch("katia.speaker.speaker.Session"), mock.patch(
+            "katia.speaker.speaker.mixer"
+        ), mock.patch(
+            "katia.speaker.speaker.KatiaConsumer"
+        ), mock.patch(
+            "katia.speaker.speaker.KatiaProducer"
+        ) as mock_producer, freezegun.freeze_time("1994-08-08 14:30:00"):
+            speaker = KatiaSpeaker(
+                owner_uuid="test-uuid",
+            )
+            speaker.send_last_speak()
+            self.assertEqual(mock_producer().send_message.call_count, 1)
+            self.assertEqual(
+                mock_producer().send_message.call_args,
+                mock.call(
+                    message_data={
+                        "source": "speaker",
+                        "message": "1994-08-08T14:30:00"
+                    }
+                ),
+            )

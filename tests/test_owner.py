@@ -59,11 +59,11 @@ class OwnerTestCase(TestCase):
                     mock_admin_client.call_args,
                     mock.call(
                         {
-                            "bootstrap.servers": ("test-broker-url:test-broker-port"),
+                            "bootstrap.servers": "test-broker-url:test-broker-port",
                         }
                     ),
                 )
-                self.assertEqual(mock_new_topic.call_count, 3)
+                self.assertEqual(mock_new_topic.call_count, 4)
                 self.assertEqual(
                     mock_new_topic.call_args_list,
                     [
@@ -82,12 +82,22 @@ class OwnerTestCase(TestCase):
                             num_partitions=1,
                             replication_factor=1,
                         ),
+                        mock.call(
+                            f"user-{owner.uuid}-recognizer-last-speaking",
+                            num_partitions=1,
+                            replication_factor=1,
+                        ),
                     ],
                 )
                 self.assertEqual(mock_admin_client().create_topics.call_count, 1)
                 self.assertEqual(
                     mock_admin_client().create_topics.call_args,
-                    mock.call(["test-new-topic", "test-new-topic", "test-new-topic"]),
+                    mock.call(
+                        [
+                            "test-new-topic", "test-new-topic", "test-new-topic",
+                            "test-new-topic"
+                        ]
+                    ),
                 )
                 self.assertEqual(mock_f.result.call_count, mock_f_result_call_count)
                 self.assertEqual(

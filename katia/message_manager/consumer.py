@@ -16,7 +16,7 @@ class KatiaConsumer(Consumer):
     the kafka service specified in the env values.
     """
 
-    def __init__(self, topic: str):
+    def __init__(self, topic: str, group_id: str):
         logger.info("Initializing consumer")
         self.broker_host = os.getenv("KAFKA_BROKER_URL")
         self.broker_port = os.getenv("KAFKA_BROKER_PORT")
@@ -24,7 +24,7 @@ class KatiaConsumer(Consumer):
         super().__init__(
             {
                 "bootstrap.servers": f"{self.broker_host}:{self.broker_port}",
-                "group.id": "miau-group",
+                "group.id": group_id,
                 "auto.offset.reset": "earliest",
             }
         )

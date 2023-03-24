@@ -16,7 +16,7 @@ class KatiaProducer(Producer):
     the kafka service specified in the env values.
     """
 
-    def __init__(self, topic: str):
+    def __init__(self, topic: str, group_id: str):
         logger.info("Initializing producer")
         self.broker_host = os.getenv("KAFKA_BROKER_URL")
         self.broker_port = os.getenv("KAFKA_BROKER_PORT")
@@ -24,7 +24,7 @@ class KatiaProducer(Producer):
         super().__init__(
             {
                 "bootstrap.servers": f"{self.broker_host}:{self.broker_port}",
-                "group.id": "miau-group",
+                "group.id": group_id,
             }
         )
         logger.info(
@@ -44,7 +44,7 @@ class KatiaProducer(Producer):
         if err is not None:
             logger.error(
                 "Error while producing message in katia producer",
-                extra={"err": err, "message": message.value().decode("utf-8")},
+                extra={"err": err, "err_message": message.value().decode("utf-8")},
             )
         else:
             message_to_logger = (

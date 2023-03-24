@@ -140,7 +140,7 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.29.97"
+version = "1.29.98"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
 optional = false
@@ -278,6 +278,17 @@ python-versions = "*"
 
 [package.extras]
 tests = ["asttokens", "pytest", "littleutils", "rich"]
+
+[[package]]
+name = "freezegun"
+version = "1.2.2"
+description = "Let your Python tests travel through time"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+python-dateutil = ">=2.7"
 
 [[package]]
 name = "frozenlist"
@@ -966,7 +977,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8.0,<4.0.0"
-content-hash = "96e4f39ce53ca339938a335773d8d50d675b24070e5c426194798266057ecd8e"
+content-hash = "a04f9043b0a5863360c7f5dc193f2ead2f9aa02023c31bb0c73b1e4a4dc0c945"
 
 [metadata.files]
 aiohttp = []
@@ -992,6 +1003,7 @@ dill = []
 exceptiongroup = []
 execnet = []
 executing = []
+freezegun = []
 frozenlist = []
 googletrans = []
 h11 = []

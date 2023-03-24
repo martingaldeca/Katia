@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import re
@@ -8,6 +9,7 @@ import speech_recognition as sr
 from pygame import mixer
 
 from katia.message_manager import KatiaProducer
+from katia.message_manager.consumer import KatiaConsumer
 
 logger = logging.getLogger("KatiaRecognizer")
 
@@ -37,11 +39,24 @@ class KatiaRecognizer(Thread):
         self.stopper_sentences = literal_eval(
             os.getenv("RECOGNIZER_STOPPER_SENTENCES", "[]")
         )
-        self.valid_names = valid_names
-        self.producer = KatiaProducer(topic=f"user-{owner_uuid}-interpreter")
-        self.producer_for_speaker = KatiaProducer(
-            topic=f"user-{owner_uuid}-speaker-stopper"
+        self.continue_conversation_delay_in_seconds = int(
+            os.getenv("RECOGNIZER_CONTINUE_CONVERSATION_DELAY_IN_SECONDS", "30")
         )
+        self.gap_continue_conversation_in_seconds = int(
+            os.getenv("RECOGNIZER_GAP_CONTINUE_CONVERSATION_IN_SECONDS", "3")
+        )
+        self.valid_names = valid_names
+        self.producer = KatiaProducer(
+            topic=f"user-{owner_uuid}-interpreter",
+            group_id=owner_uuid
+        )
+        self.producer_stopper = KatiaProducer(
+            topic=f"user-{owner_uuid}-speaker-stopper", group_id=owner_uuid
+        )
+        self.consumer_last_speaking = KatiaConsumer(
+            topic=f"user-{owner_uuid}-recognizer-last-speaking", group_id=owner_uuid
+        )
+        self.last_speaking = datetime.datetime.now()
         self.active = True
         logger.info("Recognizer started")
 
@@ -66,6 +81,7 @@ class KatiaRecognizer(Thread):
                         audio, language=self.language, show_all=True
                     )
                     logger.debug("recognizer catch: '%s'", recognized)
+                    self.get_last_speaking()
                     if self.called_me(recognized=recognized):
                         self.produce_messages(
                             next(iter(recognized.get("alternative", [])), {})
@@ -82,18 +98,20 @@ class KatiaRecognizer(Thread):
 
     def produce_messages(self, recognized):
         """
-        Method in charge of send to the producers:
-            The interpreter for interpret the message.
-            The speaker to stop talking if it was talking.
+        Method in charge of sending messages to the producers:
+            Stop the speaker if the user directly asks to do so while Katia is speaking
+            Send the recognized message to the interpreter if Katia is not speaking
         :param recognized:
         :return:
         """
-
-        if mixer.music.get_busy():
-            self.producer_for_speaker.send_message(
-                message_data={"source": "recognizer", "message": "Stop talking"}
+        is_speaking = mixer.music.get_busy()
+        if is_speaking and self.should_assistant_stop_talking(recognized):
+            # Stop the speaker if the user directly asks to do so while Katia is speaking
+            self.producer_stopper.send_message(
+                message_data={"source": "recognizer", "message": "Stop speaking"}
             )
-        if not self.should_assistant_stop_talking(recognized):
+        if not is_speaking and not self.should_assistant_stop_talking(recognized):
+            # Send the recognized message to the interpreter if Katia is not speaking
             logger.info("Will send the message: '%s' to the interpreter", recognized)
             self.producer.send_message(
                 message_data={"source": "recognizer", "message": recognized}
@@ -106,7 +124,10 @@ class KatiaRecognizer(Thread):
         :param recognized:
         :return:
         """
-        logger.debug("Try to check if should stop talking for sentence: '%s'", recognized)
+        logger.debug(
+            "Try to check if should stop speaking for sentence: '%s'",
+            recognized
+        )
         recognized = recognized.lower()
         recognized = recognized.replace(",", "").replace(".", "")
 
@@ -127,16 +148,28 @@ class KatiaRecognizer(Thread):
         recognized = recognized.strip()
         return_value = not bool(recognized)
         if return_value:
-            logger.info("User request the assistant to stop talking")
+            logger.info("User request the assistant to stop speaking")
         return return_value
 
     def called_me(self, recognized: dict):
         """
         This method check if the message recognized has any of the valid names for the
-        assistant, to check if it has been called
+        assistant, to check if it has been called.
+
+        Also, if the gap between the last time katia spoke and now are small enough. With
+        this you can have a "normal" conversation with her.
+
         :param recognized:
         :return:
         """
+        if (
+            recognized and
+            self.continue_conversation_delay_in_seconds >
+            (
+                datetime.datetime.now() - self.last_speaking
+            ).total_seconds() > self.gap_continue_conversation_in_seconds
+        ):
+            return True
         if recognized:
             for alternatives in recognized.get(
                 "alternative",
@@ -181,3 +214,18 @@ class KatiaRecognizer(Thread):
         :return:
         """
         self.active = False
+
+    def get_last_speaking(self):
+        """
+        Get the latest speaking from the speaker and save it.
+        """
+        data = self.consumer_last_speaking.get_data()
+        if data and (source := data.get("source", None)):
+            if source == "speaker":
+                logger.info(
+                    "Received when katia stopped talking"
+                )
+                self.last_speaking = datetime.datetime.strptime(
+                    data['message'],
+                    "%Y-%m-%dT%H:%M:%S.%f"
+                )
