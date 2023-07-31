@@ -126,8 +126,7 @@ class KatiaInterpreter(Thread):
         initial_text = "You are a "
         conjunction = "and"
         ending_text = f"assistant called {self.name}."
-        extra_description = os.getenv("KATIA_EXTRA_DESCRIPTION", "")
-        if extra_description:
+        if extra_description := os.getenv("KATIA_EXTRA_DESCRIPTION", ""):
             ending_text += f" {extra_description}"
 
         if "en" not in self.language:
@@ -159,9 +158,7 @@ class KatiaInterpreter(Thread):
         """
         language_to_use = self.language.split("-", maxsplit=1)[0]
         translator = Translator()
-        initial_text = (
-            translator.translate(text=initial_text, dest=language_to_use).text + " "
-        )
+        initial_text = f"{translator.translate(text=initial_text, dest=language_to_use).text} "
         conjunction = translator.translate(text=conjunction, dest=language_to_use).text
         ending_text = translator.translate(text=ending_text, dest=language_to_use).text
 

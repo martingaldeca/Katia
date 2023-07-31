@@ -56,6 +56,4 @@ class KatiaConsumer(Consumer):
         It can return None if there was not any message in the topic.
         :return:
         """
-        if message := self.get_message():
-            return json.loads(message)
-        return None
+        return json.loads(message) if (message := self.get_message()) else None
